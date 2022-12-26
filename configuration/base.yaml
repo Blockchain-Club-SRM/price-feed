@@ -1,0 +1,6 @@
+application:
+  port: 8000
+  host: 0.0.0.0
+gecko_client:
+  url: "https://api.coingecko.com/api/v3" 
+  timeout_milliseconds: 10000
