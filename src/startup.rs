@@ -3,7 +3,7 @@ use std::net::TcpListener;
 
 use crate::{
     configuration::Settings,
-    gecko_client::GeckoClient, routes::health_check,
+    gecko_client::GeckoClient, routes::{health_check, get_coin_market_details},
 };
 pub struct Application {
     port: u16,
@@ -21,7 +21,7 @@ pub fn run(
     let server = HttpServer::new(move || {
         App::new()
             .route("/health_check", web::get().to(health_check))
-            // .route("/ens/{address}", web::get().to(get_ens_name))
+            .route("/market", web::get().to(get_coin_market_details))
             // .route(
             //     "/nft/{address}",
             //     web::get().to(get_native_balance_by_wallet),
@@ -55,7 +55,7 @@ pub fn run(
             //                 ),
             //         ),
             // )
-            // .app_data(gecko_client.clone())
+            .app_data(gecko_client.clone())
             .app_data(base_url.clone())
     })
     .listen(listner)?
