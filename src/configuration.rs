@@ -2,6 +2,8 @@ use serde_aux::field_attributes::deserialize_number_from_string;
 use secrecy::{ExposeSecret, Secret};
 use sqlx::{postgres::{PgConnectOptions, PgSslMode}};
 
+use crate::gecko_client::GeckoClient;
+
 pub enum Environment {
     Local,
     Production,
@@ -28,14 +30,14 @@ impl TryFrom<String> for Environment {
 }
 
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize,Clone)]
 pub struct Settings {
     pub application: ApplicationSetting,
     pub gecko_client: GeckoClientSetting,
     pub database: DatabaseSetting,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize,Clone)]
 pub struct ApplicationSetting {
     pub host: String,
     pub port: u16,
@@ -48,19 +50,23 @@ impl ApplicationSetting {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize,Clone)]
 pub struct GeckoClientSetting {
     pub url: String,
     pub timeout_milliseconds: u64,
 }
 
 impl GeckoClientSetting {
+    pub fn client(self)-> GeckoClient {
+        let timeout = self.timeout();
+        GeckoClient::new(self.url, timeout)
+    }
     pub fn timeout(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.timeout_milliseconds)
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize,Clone)]
 pub struct DatabaseSetting {
     pub host: String,
     #[serde(deserialize_with = "deserialize_number_from_string")]

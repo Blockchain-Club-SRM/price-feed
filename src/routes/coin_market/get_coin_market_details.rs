@@ -1,15 +1,13 @@
 use actix_web::{web, HttpResponse};
-use anyhow::Context;
+// use anyhow::Context;
 use sqlx::{PgPool, Postgres, Transaction};
 
-use crate::{domains::Currency, gecko_client::GeckoClient};
-
 use super::{CoinFetchError, StoreTokenError};
+use crate::{domains::Currency, gecko_client::GeckoClient};
 
 #[derive(serde::Deserialize, Debug)]
 pub struct PathData {
-    currency: String,
-    page: u16,
+    symbol: String,
 }
 // impl TryFrom<PathData> for Params {
 //     type Error = String;
@@ -51,32 +49,58 @@ pub struct MarketData {
     pub last_updated: Option<String>,
 }
 
+#[derive( serde::Serialize)]
+pub struct ResponseData {
+    pub id: String,
+    pub symbol: String,
+    pub name: Option<String>,
+    pub image: Option<String>,
+    pub current_price: Option<f64>,
+    pub market_cap: Option<f64>,
+    pub market_cap_rank: Option<i32>,
+    pub fully_diluted_valuation: Option<f64>,
+    pub total_volume: Option<f64>,
+    pub high_24h: Option<f64>,
+    pub low_24h: Option<f64>,
+    pub price_change_24h: Option<f64>,
+    pub price_change_percentage_24h: Option<f64>,
+    pub market_cap_change_24h: Option<f64>,
+    pub market_cap_change_percentage_24h: Option<f64>,
+    pub circulating_supply: Option<f64>,
+    pub total_supply: Option<f64>,
+    pub max_supply: Option<f64>,
+}
 pub async fn get_coin_market_details(
-    parameters: web::Query<PathData>,
-    gecko_client: web::Data<GeckoClient>,
+    path: web::Query<PathData>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, CoinFetchError> {
-    let page = parameters.page;
-    let currency = parameters
-        .into_inner()
-        .currency
-        .try_into()
-        .map_err(CoinFetchError::ValidationError)?;
-    let mut transaction = pool
-        .begin()
+    let symbol = path.into_inner().symbol;
+    let result = sqlx::query!(r#"SELECT * FROM market_data WHERE symbol = $1"#, symbol,)
+        .fetch_one(pool.as_ref())
         .await
-        .context("Failed to acquire a Postgres connection from the pool")?;
-    let result = coin_market_details(&gecko_client, &currency, page).await?;
-    for data in &result {
-        if let Some(data) = data {
-            store_market_data(&mut transaction, &data).await.context("Failed to store market data")?;
+        .map_err(|_| CoinFetchError::NotFoundError(format!("Data for {} not found !",symbol)))?;
+    Ok(HttpResponse::Ok().json(
+        ResponseData {
+            id: result.id,
+            symbol: result.symbol,
+            name: result.name,
+            image: result.image,
+            current_price: result.current_price,
+            market_cap: result.market_cap,
+            market_cap_rank: result.market_cap_rank,
+            fully_diluted_valuation: result.fully_diluted_valuation,
+            total_volume: result.total_volume,
+            high_24h: result.high_24h,
+            low_24h: result.low_24h,
+            price_change_24h: result.price_change_24h,
+            price_change_percentage_24h: result.price_change_percentage_24h,
+            market_cap_change_24h: result.market_cap_change_24h,
+            market_cap_change_percentage_24h: result.market_cap_change_percentage_24h,
+            circulating_supply: result.circulating_supply,
+            total_supply: result.total_supply,
+            max_supply: result.max_supply,
         }
-    }
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit SQL transaction to store a market data.")?;
-    Ok(HttpResponse::Ok().json(result))
+    ))
 }
 
 pub async fn coin_market_details(

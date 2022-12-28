@@ -1,0 +1,39 @@
+{
+  "db": "PostgreSQL",
+  "e4295c6052e62607d6836e1462f0a4bbd1f06425761bf9032168e1ed05c10b01": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Float8",
+          "Float8",
+          "Int4",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Float8",
+          "Text",
+          "Float8",
+          "Float8",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO market_data (\n                id,\n                symbol,\n                name,\n                image,\n                current_price,\n                market_cap,\n                market_cap_rank,\n                fully_diluted_valuation,\n                total_volume,\n                high_24h,\n                low_24h,\n                price_change_24h,\n                price_change_percentage_24h,\n                market_cap_change_24h,\n                market_cap_change_percentage_24h,\n                circulating_supply,\n                total_supply,\n                max_supply,\n                ath,\n                ath_change_percentage,\n                ath_date,\n                atl,\n                atl_change_percentage,\n                atl_date,\n                last_updated\n            ) VALUES (\n                $1,\n                $2,\n                $3,\n                $4,\n                $5,\n                $6,\n                $7,\n                $8,\n                $9,\n                $10,\n                $11,\n                $12,\n                $13,\n                $14,\n                $15,\n                $16,\n                $17,\n                $18,\n                $19,\n                $20,\n                $21,\n                $22,\n                $23,\n                $24,\n                $25\n            )\n            ON CONFLICT (id) DO UPDATE SET\n                symbol = $2,\n                name = $3,\n                image = $4,\n                current_price = $5,\n                market_cap = $6,\n                market_cap_rank = $7,\n                fully_diluted_valuation = $8,\n                total_volume = $9,\n                high_24h = $10,\n                low_24h = $11,\n                price_change_24h = $12,\n                price_change_percentage_24h = $13,\n                market_cap_change_24h = $14,\n                market_cap_change_percentage_24h = $15,\n                circulating_supply = $16,\n                total_supply = $17,\n                max_supply = $18,\n                ath = $19,\n                ath_change_percentage = $20,\n                ath_date = $21,\n                atl = $22,\n                atl_change_percentage = $23,\n                atl_date = $24,\n                last_updated = $25\n            "
+  }
+}

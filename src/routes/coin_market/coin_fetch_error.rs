@@ -6,6 +6,8 @@ use crate::utils::error_chain_fmt;
 pub enum CoinFetchError {
     #[error("{0}")]
     ValidationError(String),
+    #[error("{0}")]
+    NotFoundError(String),
     #[error("Failed to fetch result from CoinGecko")]
     GeckoError(#[from] reqwest::Error),
     #[error(transparent)]
@@ -24,6 +26,7 @@ impl ResponseError for CoinFetchError {
             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
             Self::GeckoError(_) |
             Self::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::NotFoundError(_) => StatusCode::NOT_FOUND,
         }
     }
     fn error_response(&self) -> HttpResponse<actix_web::body::BoxBody> {
