@@ -1,3 +1,7 @@
+use serde_aux::field_attributes::deserialize_number_from_string;
+use secrecy::{ExposeSecret, Secret};
+use sqlx::{postgres::{PgConnectOptions, PgSslMode}};
+
 pub enum Environment {
     Local,
     Production,
@@ -28,6 +32,7 @@ impl TryFrom<String> for Environment {
 pub struct Settings {
     pub application: ApplicationSetting,
     pub gecko_client: GeckoClientSetting,
+    pub database: DatabaseSetting,
 }
 
 #[derive(serde::Deserialize)]
@@ -52,6 +57,37 @@ pub struct GeckoClientSetting {
 impl GeckoClientSetting {
     pub fn timeout(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.timeout_milliseconds)
+    }
+}
+
+#[derive(serde::Deserialize)]
+pub struct DatabaseSetting {
+    pub host: String,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub port: u16,
+    pub username: String,
+    pub password: Secret<String>,
+    pub database_name: String,
+    pub require_ssl: bool,
+}
+
+impl DatabaseSetting {
+    pub fn without_db(&self) -> PgConnectOptions {
+        let ssl_mode = if self.require_ssl {
+            PgSslMode::Require
+        } else {
+            PgSslMode::Prefer
+        };
+        PgConnectOptions::new()
+            .host(&self.host)
+            .username(&self.username)
+            .password(self.password.expose_secret())
+            .port(self.port)
+            .ssl_mode(ssl_mode)
+    }
+
+    pub fn with_db(&self) -> PgConnectOptions {
+        self.without_db().database(&self.database_name)
     }
 }
 

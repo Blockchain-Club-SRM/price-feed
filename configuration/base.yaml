@@ -4,3 +4,10 @@ application:
 gecko_client:
   url: "https://api.coingecko.com/api/v3" 
   timeout_milliseconds: 10000
+database:
+  host: "127.0.0.1"
+  port: 5432
+  username: "postgres"
+  password: "password"
+  database_name: "market"
+  require_ssl: false
